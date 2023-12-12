@@ -8,5 +8,5 @@ jobs:
     with:
       TAG: python-check
       USER: raviroch
-      REGISTRY: ghcr.io
+      # REGISTRY: ghcr.io
       VERSION: v1
