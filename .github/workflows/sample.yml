@@ -1,12 +1,41 @@
-name: Build and check a Docker image core
+name: Build and check a Docker image template
 
-on: push
+on: 
+  workflow_call:
+    inputs:
+      TAG: 
+        required: true
+        type: string
+      USER: 
+        required: true
+        type: string
+      # REGISTRY:
+      #   required: true
+      #   type: string
+      VERSION: 
+        required: true
+        type: string
 
 jobs:
-  build1:
-    uses: raviroch/Reuse/.github/workflows/build.yml@main
-    with:
-      TAG: python-check
-      USER: raviroch
-      # REGISTRY: ghcr.io
-      VERSION: v1
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    # permissions:
+    #   contents: read
+    #   packages: write
+      
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ inputs.TAG }} .
+          docker tag ${{ inputs.TAG }} ${{ inputs.USER }}/${{ inputs.TAG }}:${{ inputs.VERSION }}
+      - name: Image Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ inputs.USER }}/${{ inputs.TAG }}:${{ inputs.VERSION }}'
+          security-checks: 'vuln,secret,config'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
